@@ -2,11 +2,13 @@ import React, { useRef } from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import ReactPaginate from "react-paginate";
+import Loading from "./Loading";
 
 const Home = ({ itemsPerPage }) => {
   const [pageEntries, setPageEntries] = useState([]);
   const [entries, setEntries] = useState([]);
   const [entry, setEntry] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [pageCount, setPageCount] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
   const inputSearch = useRef(null);
@@ -14,22 +16,22 @@ const Home = ({ itemsPerPage }) => {
   useEffect(() => {
     const endOffset = itemOffset + itemsPerPage;
     async function Data() {
-      const fetchData = await fetch("http://localhost:5001/entries");
+      const fetchData = await fetch("https://shielded-sea-63434.herokuapp.com/entries");
       const res = await fetchData.json();
       const data = res.slice(itemOffset, endOffset);
       setPageCount(Math.ceil(res.length / itemsPerPage));
       setPageEntries(data);
       setEntries(res);
+      setIsLoading(false);
     }
     Data();
   }, [itemOffset, itemsPerPage]);
 
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) / pageEntries.length;
-    console.log(
-      `User requested page number ${event.selected}, which is offset ${newOffset} ${pageEntries.length}`
-    );
+    setIsLoading(true);
+    const newOffset = (event.selected * itemsPerPage) % entries.length;
     setItemOffset(newOffset);
+    window.scrollTo(0, 0);
   };
 
   const handleSearch = (e) => {
@@ -37,13 +39,17 @@ const Home = ({ itemsPerPage }) => {
     const text = inputSearch.current.value;
 
     if (text !== "") {
-      const search = entries.filter((entry) => entry.API.includes(text));
+      const search = entries.filter((entry) => entry.API.includes(text.trim()));
       setPageEntries([]);
       setEntry(search);
     } else {
       setEntries(entries);
     }
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
     <div>
@@ -121,22 +127,19 @@ const Home = ({ itemsPerPage }) => {
               ))}
           </tbody>
         </table>
-
-        {/* <div>
-            {[...Array(pageCount).keys()].map((num) => (
-              <button className="p-2 border mr-2" onClick={()=> setPage(num+1)}>{num + 1}</button>
-            ))}
-          </div> */}
       </div>
       {entry === false && (
         <ReactPaginate
-          className="flex justify-center gap-10 my-4"
+          className="flex justify-center gap-10 my-4 items-center"
+          activeLinkClassName="bg-yellow-400 px-2 py-1"
+          previousClassName="bg-blue-500 px-2 py-1 rounded text-white font-bold"
+          nextClassName="bg-blue-500 px-2 py-1 rounded text-white font-bold"
           breakLabel="..."
-          nextLabel="next >"
+          nextLabel="Next >"
           onPageChange={handlePageClick}
           pageRangeDisplayed={3}
           pageCount={pageCount}
-          previousLabel="< previous"
+          previousLabel="< Previous"
           renderOnZeroPageCount={null}
         />
       )}
