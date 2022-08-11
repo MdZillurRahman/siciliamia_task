@@ -1,34 +1,48 @@
 import React, { useRef } from "react";
 import { useEffect } from "react";
-import { useState } from "react";
+import { useContext } from "react";
 import ReactPaginate from "react-paginate";
+import { AllContext } from "../context/AllProvider";
 import Loading from "./Loading";
 
 const Home = ({ itemsPerPage }) => {
-  const [pageEntries, setPageEntries] = useState([]);
-  const [entries, setEntries] = useState([]);
-  const [entry, setEntry] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pageCount, setPageCount] = useState(0);
-  const [itemOffset, setItemOffset] = useState(0);
+  const {
+    pageEntries,
+    setPageEntries,
+    entries,
+    setEntries,
+    entry,
+    setEntry,
+    isLoading,
+    setIsLoading,
+    pageCount,
+    setPageCount,
+    itemOffset,
+    setItemOffset,
+    tableLoading,
+    setTableLoading,
+  } = useContext(AllContext);
   const inputSearch = useRef(null);
 
   useEffect(() => {
     const endOffset = itemOffset + itemsPerPage;
     async function Data() {
-      const fetchData = await fetch("https://shielded-sea-63434.herokuapp.com/entries");
+      const fetchData = await fetch(
+        "https://shielded-sea-63434.herokuapp.com/entries"
+      );
       const res = await fetchData.json();
       const data = res.slice(itemOffset, endOffset);
       setPageCount(Math.ceil(res.length / itemsPerPage));
       setPageEntries(data);
       setEntries(res);
       setIsLoading(false);
+      setTableLoading(false);
     }
     Data();
-  }, [itemOffset, itemsPerPage]);
+  }, [itemOffset, itemsPerPage, setEntries, setIsLoading, setPageCount, setPageEntries, setTableLoading]);
 
   const handlePageClick = (event) => {
-    setIsLoading(true);
+    setTableLoading(true);
     const newOffset = (event.selected * itemsPerPage) % entries.length;
     setItemOffset(newOffset);
     window.scrollTo(0, 0);
@@ -53,7 +67,7 @@ const Home = ({ itemsPerPage }) => {
 
   return (
     <div>
-      <div class="h-[100px] flex flex-col justify-center mt-20 mb-8">
+      <div class="h-[100px] flex flex-col justify-center mt-10 mb-8">
         <div class="relative p-12 w-full sm:max-w-2xl sm:mx-auto">
           <div class="overflow-hidden z-0 rounded-full relative p-3">
             <form
@@ -91,42 +105,46 @@ const Home = ({ itemsPerPage }) => {
       </div>
 
       <div className="flex justify-center">
-        <table className=" my-2 mx-4 rounded">
-          <thead className="text-white text-xl bg-yellow-400 h-[50px]">
-            <tr className="w-[600px]">
-              <th>API</th>
-              <th>Category</th>
-              <th>Description</th>
-              <th>Link</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageEntries?.map((entry) => (
-              <tr className="w-[600px]">
-                <td className="p-6">{entry.API}</td>
-                <td className="p-6">{entry.Category}</td>
-                <td className="p-6">{entry.Description}</td>
-                <td className="p-6">
-                  {" "}
-                  <a href={`${entry.Link}`}>{entry.Link}</a>
-                </td>
+        {tableLoading ? (
+          <Loading />
+        ) : (
+          <table className="w-[80%] my-2 mx-4 rounded">
+            <thead className="text-white text-xl bg-yellow-400 h-[50px]">
+              <tr className="">
+                <th>API</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Link</th>
               </tr>
-            ))}
-          </tbody>
-          <tbody>
-            {entry &&
-              entry?.map((entry) => (
-                <tr>
+            </thead>
+            <tbody>
+              {pageEntries?.map((entry) => (
+                <tr className="w-[600px]">
                   <td className="p-6">{entry.API}</td>
                   <td className="p-6">{entry.Category}</td>
                   <td className="p-6">{entry.Description}</td>
                   <td className="p-6">
+                    {" "}
                     <a href={`${entry.Link}`}>{entry.Link}</a>
                   </td>
                 </tr>
               ))}
-          </tbody>
-        </table>
+            </tbody>
+            <tbody>
+              {entry &&
+                entry?.map((entry) => (
+                  <tr>
+                    <td className="p-6">{entry.API}</td>
+                    <td className="p-6">{entry.Category}</td>
+                    <td className="p-6">{entry.Description}</td>
+                    <td className="p-6">
+                      <a href={`${entry.Link}`}>{entry.Link}</a>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        )}
       </div>
       {entry === false && (
         <ReactPaginate

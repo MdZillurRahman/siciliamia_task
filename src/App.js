@@ -6,7 +6,7 @@ import { Routes, Route, Link } from "react-router-dom";
 function App() {
   return (
     <div>
-      <Navbar />
+      <Navbar/>
       <Routes>
         <Route path="/" element={<Home itemsPerPage={15} />} />
         <Route path="/home" element={<Home itemsPerPage={15} />} />
